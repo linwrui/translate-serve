@@ -1,6 +1,7 @@
 const express = require('express');
 const { translate } = require('@vitalets/google-translate-api');
 const tunnel = require('tunnel');
+const cors = require('cors');
 
 const app = express();
 
@@ -14,9 +15,12 @@ const proxyOption = {
     }
 };
 
+// 允许跨域
+app.use(cors());
+
 // 解析 JSON 请求体
 app.use(express.json());
-
+const transMap = {}
 // 翻译接口
 app.post('/translate', async (req, res) => {
   try {
@@ -45,14 +49,20 @@ app.post('/translate', async (req, res) => {
     
     // 使用特殊分隔符连接字符串，一次性翻译
     const SEPARATOR = '\n------\n';
-    const joinedStr = strList.join(SEPARATOR);
+
+    const unTransList = strList.filter(o => !transMap[o])
+    const joinedStr = unTransList.join(SEPARATOR);
 
     console.log('翻译请求:', { fromKey, toKey, joinedStr, useProxy });
 
     const { text } = await translate(joinedStr, translateOptions);
     const results = text.split(SEPARATOR);
+    results.forEach((o, index) => {
+      transMap[unTransList[index]] = o
+    })
+    const transResult = strList.map(o => transMap[o] || o)
     
-    res.json({ success: true, translations: results });
+    res.json({ success: true, translations: transResult });
   } catch (error) {
     console.error('翻译失败:', error);
     console.error('错误详情:', error.message, error.code);
