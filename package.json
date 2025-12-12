@@ -26,6 +26,7 @@
     "express": "^4.22.1",
     "google-translate-api-v2": "^1.0.2",
     "https-proxy-agent": "^2.2.4",
+    "lodash": "^4.17.21",
     "request": "^2.88.2",
     "request-promise": "^4.2.6",
     "tunnel": "0.0.6"

@@ -2,6 +2,7 @@ const express = require('express');
 const { translate: googleTranslate } = require('@vitalets/google-translate-api');
 const tunnel = require('tunnel');
 const cors = require('cors');
+const _ = require('lodash');
 
 const app = express();
 
@@ -46,10 +47,11 @@ const colors = {
 app.post('/translate', async (req, res) => {
   try {
     const { strList, fromKey = 'zh-cn', toKey = 'en', useProxy = USE_PROXY, engine='google', dict={} } = req.body;
-    if (!transMap[engine]) {
-      transMap[engine] = {}
+    const mapKey = `${req.hostname}_${engine}_${fromKey}-${toKey}`
+    if (!transMap[mapKey]) {
+      transMap[mapKey] = {}
     }
-    const engineTransMap = transMap[engine]
+    const engineTransMap = transMap[mapKey]
     const targetDic = {}
     if (dict) {
       // 转换为目标字典格式
@@ -63,6 +65,12 @@ app.post('/translate', async (req, res) => {
         if (target) {
           targetDic[key] = target
         }
+      }
+      if (!_.isEqual(engineTransMap['__dict__'], targetDic)) {
+        console.log(`${colors.yellow}[消息]${colors.reset} 字典已更新`)
+        // 字典更新后，主动清空缓存
+        engineTransMap['__dict__'] = targetDic
+        engineTransMap[mapKey] = {}
       }
       Object.assign(engineTransMap, targetDic)
     }
