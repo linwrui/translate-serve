@@ -46,12 +46,20 @@ const colors = {
 // 翻译接口
 app.post('/translate', async (req, res) => {
   try {
-    const { strList, fromKey = 'zh-cn', toKey = 'en', useProxy = USE_PROXY, engine='google', dict={} } = req.body;
+    const { 
+      strList, 
+      fromKey = 'zh-cn', 
+      toKey = 'en', 
+      useProxy = USE_PROXY, 
+      useCache = true,
+      engine='google', 
+      dict={} 
+    } = req.body;
     const mapKey = `${req.hostname}_${engine}_${fromKey}-${toKey}`
     if (!transMap[mapKey]) {
       transMap[mapKey] = {}
     }
-    const engineTransMap = transMap[mapKey]
+    const engineTransMap = useCache ? transMap[mapKey] : {}
     const targetDic = {}
     if (dict) {
       // 转换为目标字典格式
@@ -66,7 +74,7 @@ app.post('/translate', async (req, res) => {
           targetDic[key] = target
         }
       }
-      if (!_.isEqual(engineTransMap['__dict__'], targetDic)) {
+      if (!_.isEqual(engineTransMap['__dict__'], targetDic) && useCache) {
         console.log(`${colors.yellow}[消息]${colors.reset} 字典已更新`)
         // 字典更新后，主动清空缓存
         engineTransMap['__dict__'] = targetDic
