@@ -95,17 +95,17 @@ app.post('/translate', async (req, res) => {
     }
     const joinedStr = unTransList.map(o => o.transText).join(SEPARATOR)
     let text = ''
+
     // 调用翻译 API
-
-    console.log(`${colors.blue}[调用]${colors.reset} ---调用 ${_.upperFirst(engine)} 翻译 API---`)
-
     switch (_.upperFirst(_.camelCase(engine))) {
       case 'Google':
+        console.log(`${colors.blue}[调用]${colors.reset} ---调用 Google 翻译 API---`)
         text = await googleTranslate(joinedStr, req.body)
         break
       default:
         // TODO 接入其他引擎
-        break
+        console.log(`${colors.yellow}[警告]${colors.reset} 不支持的翻译引擎 "${engine}"`)
+        throw new Error(`不支持的翻译引擎 "${engine}"`)
     }
     const results = text.split(SEPARATOR)
     results.forEach((o, index) => {
