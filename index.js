@@ -55,7 +55,7 @@ app.post('/translate', async (req, res) => {
       engine='google', 
       dict={} 
     } = req.body;
-    const mapKey = `${req.hostname}_${engine}_${fromKey}-${toKey}`
+    const mapKey = `${engine}_${fromKey}-${toKey}`
     if (!transMap[mapKey]) {
       transMap[mapKey] = {}
     }
@@ -73,12 +73,6 @@ app.post('/translate', async (req, res) => {
         if (target) {
           targetDic[key] = target
         }
-      }
-      if (!_.isEqual(engineTransMap['__dict__'], targetDic) && useCache) {
-        console.log(`${colors.yellow}[消息]${colors.reset} 字典已更新`)
-        // 字典更新后，主动清空缓存
-        engineTransMap['__dict__'] = targetDic
-        engineTransMap[mapKey] = {}
       }
       Object.assign(engineTransMap, targetDic)
     }
