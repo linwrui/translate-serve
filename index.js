@@ -1,5 +1,5 @@
 const express = require('express');
-const { translate } = require('@vitalets/google-translate-api');
+const { translate: googleTranslate } = require('@vitalets/google-translate-api');
 const tunnel = require('tunnel');
 const cors = require('cors');
 
@@ -24,7 +24,7 @@ const transMap = {}
 // 翻译接口
 app.post('/translate', async (req, res) => {
   try {
-    const { strList, fromKey = 'zh-cn', toKey = 'en', useProxy = USE_PROXY } = req.body;
+    const { strList, fromKey = 'zh-cn', toKey = 'en', useProxy = USE_PROXY, engine='google' } = req.body;
     
     // 验证参数
     if (!Array.isArray(strList) || strList.length === 0) {
@@ -50,12 +50,20 @@ app.post('/translate', async (req, res) => {
     // 使用特殊分隔符连接字符串，一次性翻译
     const SEPARATOR = '\n------\n';
 
+    console.log('翻译请求:', JSON.stringify({ fromKey, toKey, strList, useProxy }));
+
     const unTransList = strList.filter(o => !transMap[o])
     const joinedStr = unTransList.join(SEPARATOR);
-
-    console.log('翻译请求:', { fromKey, toKey, joinedStr, useProxy });
-
-    const { text } = await translate(joinedStr, translateOptions);
+    let text = ''
+    // 调用 Google 翻译 API
+    switch(engine){
+      case 'google':
+        text = await googleTranslate(joinedStr, translateOptions);
+        break;
+      default:
+        // TODO 接入其他引擎
+        break;
+    }
     const results = text.split(SEPARATOR);
     results.forEach((o, index) => {
       transMap[unTransList[index]] = o
