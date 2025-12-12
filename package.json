@@ -2,10 +2,10 @@
   "name": "translate-serve",
   "version": "1.0.0",
   "description": "基于 nodejs 的翻译服务",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js",
+    "start": "ts-node index.ts",
+    "dev": "nodemon index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -27,6 +27,12 @@
     "tunnel": "0.0.6"
   },
   "devDependencies": {
-    "nodemon": "^3.1.11"
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/lodash": "^4.17.21",
+    "@types/tunnel": "0.0.7",
+    "nodemon": "^3.1.11",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
   }
 }

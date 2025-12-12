@@ -1,8 +1,9 @@
-const express = require('express')
-const { translate: googleTranslate } = require('@vitalets/google-translate-api')
-const tunnel = require('tunnel')
-const cors = require('cors')
-const _ = require('lodash')
+import express from 'express'
+import cors from 'cors'
+import _ from 'lodash'
+
+import googleTranslate from './translate/google-translate'
+
 // 日志颜色配置
 const colors = {
   reset: '\x1b[0m',
@@ -23,17 +24,7 @@ app.use(cors())
 // 解析 JSON 请求体
 app.use(express.json())
 
-// 代理配置
-const USE_PROXY = true // 设置为false以禁用代理
-const proxyOption = {
-  host: '127.0.0.1',
-  port: 10809,
-  headers: {
-    'User-Agent': 'Node',
-  },
-}
-
-const transMap = {}
+const transMap: Record<string, Record<string, string>> = {}
 
 // 健康检查接口
 app.get('/health', (req, res) => {
@@ -50,13 +41,13 @@ app.post('/clearCache', (req, res) => {
 // 翻译接口
 app.post('/translate', async (req, res) => {
   try {
-    const { strList, fromKey = 'zh-cn', toKey = 'en', useProxy = USE_PROXY, useCache = true, engine = 'google', dict = {} } = req.body
+    const { strList, fromKey='zh-cn', toKey='en', useCache = true, engine = 'google', dict = {} } = req.body
     const mapKey = `${engine}_${fromKey}-${toKey}`
     if (!transMap[mapKey]) {
       transMap[mapKey] = {}
     }
     const engineTransMap = useCache ? transMap[mapKey] : {}
-    const targetDic = {}
+    const targetDic: Record<string, string> = {}
     if (dict) {
       // 转换为目标字典格式
       for (const key in dict) {
@@ -77,25 +68,10 @@ app.post('/translate', async (req, res) => {
       return res.status(400).json({ error: 'strList 必须是非空数组' })
     }
 
-    // 准备翻译配置
-    const translateOptions = {
-      from: fromKey,
-      to: toKey,
-    }
-
-    // 如果使用代理，添加代理配置
-    if (useProxy) {
-      translateOptions.fetchOptions = {
-        agent: tunnel.httpsOverHttp({
-          proxy: proxyOption,
-        }),
-      }
-    }
-
     // 使用特殊分隔符连接字符串，一次性翻译
     const SEPARATOR = '\n--$$$--\n'
 
-    console.log(`${colors.cyan}[信息]${colors.reset} 翻译请求:`, JSON.stringify({ fromKey, toKey, strList, useProxy }))
+    console.log(`${colors.cyan}[信息]${colors.reset} 翻译请求:`, JSON.stringify(req.body))
 
     const unTransList = strList
       .filter(o => !engineTransMap[o])
@@ -119,11 +95,13 @@ app.post('/translate', async (req, res) => {
     }
     const joinedStr = unTransList.map(o => o.transText).join(SEPARATOR)
     let text = ''
-    // 调用 Google 翻译 API
-    switch (engine) {
-      case 'google':
-        console.log(`${colors.blue}[调用]${colors.reset} ---调用 Google 翻译 API---`)
-        text = await googleTranslate(joinedStr, translateOptions).then(res => res.text)
+    // 调用翻译 API
+
+    console.log(`${colors.blue}[调用]${colors.reset} ---调用 ${_.upperFirst(engine)} 翻译 API---`)
+
+    switch (_.upperFirst(_.camelCase(engine))) {
+      case 'Google':
+        text = await googleTranslate(joinedStr, req.body)
         break
       default:
         // TODO 接入其他引擎
@@ -136,7 +114,7 @@ app.post('/translate', async (req, res) => {
     const transResult = strList.map(o => engineTransMap[o] || o)
     console.log(`${colors.green}[成功]${colors.reset} ---翻译完成---`)
     res.json({ success: true, translations: transResult })
-  } catch (error) {
+  } catch (error: any) {
     console.error(`${colors.red}[错误]${colors.reset} ---翻译失败---`)
     console.error(`${colors.red}[错误]${colors.reset} 错误详情:`, error.message, error.code)
 
@@ -156,7 +134,7 @@ app.post('/translate', async (req, res) => {
 })
 
 const PORT = process.env.PORT || 3001
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(+PORT, '0.0.0.0', () => {
   console.log(`${colors.green}[成功]${colors.reset} 翻译服务已启动，监听端口 ${PORT}`)
   console.log(`${colors.blue}[地址]${colors.reset} 健康检查: http://localhost:${PORT}/health`)
   console.log(`${colors.blue}[地址]${colors.reset} 健康检查: http://0.0.0.0:${PORT}/health`)
