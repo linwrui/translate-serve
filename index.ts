@@ -3,6 +3,7 @@ import cors from 'cors'
 import _ from 'lodash'
 
 import googleTranslate from './translate/google-translate'
+import volcTranslate from './translate/volc-translate'
 
 // 日志颜色配置
 const colors = {
@@ -101,6 +102,10 @@ app.post('/translate', async (req, res) => {
       case 'Google':
         console.log(`${colors.blue}[调用]${colors.reset} ---调用 Google 翻译 API---`)
         text = await googleTranslate(joinedStr, req.body)
+        break
+      case 'Volc':
+        console.log(`${colors.blue}[调用]${colors.reset} ---调用 火山翻译 API---`)
+        text = await volcTranslate(joinedStr, req.body)
         break
       default:
         // TODO 接入其他引擎
