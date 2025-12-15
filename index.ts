@@ -70,8 +70,11 @@ app.post('/translate', async (req, res) => {
     }
 
     // 使用特殊分隔符连接字符串，一次性翻译
-    const SEPARATOR = '\n--$$$--\n'
-
+    const SEPARATOR = req.body.separator || '\n--$$$--\n'
+    const options = {
+      ...req.body,
+      separator: SEPARATOR,
+    }
     console.log(`${colors.cyan}[信息]${colors.reset} 翻译请求:`, JSON.stringify(req.body))
 
     const unTransList = strList
@@ -95,24 +98,24 @@ app.post('/translate', async (req, res) => {
       })
     }
     const joinedStr = unTransList.map(o => o.transText).join(SEPARATOR)
-    let text = ''
+    let translateRes = ''
 
     // 调用翻译 API
     switch (_.upperFirst(_.camelCase(engine))) {
       case 'Google':
         console.log(`${colors.blue}[调用]${colors.reset} ---调用 Google 翻译 API---`)
-        text = await googleTranslate(joinedStr, req.body)
+        translateRes = await googleTranslate(joinedStr, options)
         break
       case 'Volc':
         console.log(`${colors.blue}[调用]${colors.reset} ---调用 火山翻译 API---`)
-        text = await volcTranslate(joinedStr, req.body)
+        translateRes = await volcTranslate(joinedStr, options)
         break
       default:
         // TODO 接入其他引擎
         console.log(`${colors.yellow}[警告]${colors.reset} 不支持的翻译引擎 "${engine}"`)
         throw new Error(`不支持的翻译引擎 "${engine}"`)
     }
-    const results = text.split(SEPARATOR)
+    const results = typeof translateRes === 'string' ? translateRes.split(SEPARATOR) : translateRes
     results.forEach((o, index) => {
       engineTransMap[unTransList[index].sourceText] = o
     })

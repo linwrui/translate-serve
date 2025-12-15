@@ -6,4 +6,5 @@ export interface TranslateOptions {
     useCache?: boolean
     engine?: string
     dict?: Record<string, string | Record<string, string>>
+    separator?: string
 }
