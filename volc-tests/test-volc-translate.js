@@ -9,7 +9,7 @@ async function testVolcTranslate() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        strList: ['Hello world', 'This is a test'],
+        strList: ['Hello', 'world'],
         fromKey: 'en',
         toKey: 'zh',
         engine: 'volc',

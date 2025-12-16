@@ -43,7 +43,7 @@ app.post('/clearCache', (req, res) => {
 app.post('/translate', async (req, res) => {
   try {
     const { strList, fromKey='zh-cn', toKey='en', useCache = true, engine = 'google', dict = {} } = req.body
-    const mapKey = `${engine}_${fromKey}-${toKey}`
+    const mapKey = `${engine}_${fromKey}_${toKey}`
     if (!transMap[mapKey]) {
       transMap[mapKey] = {}
     }

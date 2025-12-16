@@ -6,7 +6,7 @@ async function testBatchTranslate() {
     // 创建超过16个元素的测试数组
     const strList = [];
     for (let i = 0; i < 20; i++) {
-      strList.push(`这是测试文本 ${i + 1}`);
+      strList.push(`测试 ${i + 1}`);
     }
     
     console.log('发送翻译请求，包含', strList.length, '个文本');
